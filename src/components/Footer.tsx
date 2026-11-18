@@ -1,6 +1,10 @@
 import { WHATSAPP_DIRECT_URL, WHATSAPP_DISPLAY } from '../data/gisContent';
 
-export default function Footer() {
+interface FooterProps {
+  onOpenCrm: () => void;
+}
+
+export default function Footer({ onOpenCrm }: FooterProps) {
   return (
     <footer className="bg-[#0f2b5c] text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -51,6 +55,15 @@ export default function Footer() {
                 <a href="#soalan" className="hover:text-white transition-colors">
                   Soalan Lazim (FAQ)
                 </a>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={onOpenCrm}
+                  className="text-left text-[#f59e0b] hover:underline cursor-pointer"
+                >
+                  Portal CRM Pentadbir
+                </button>
               </li>
             </ul>
           </div>

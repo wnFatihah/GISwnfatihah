@@ -12,6 +12,11 @@ import {
   WHATSAPP_DIRECT_URL,
   WHATSAPP_DISPLAY,
 } from '../data/gisContent';
+import { appendLeadToStorage } from '../utils/leadsStorage';
+
+interface FaqAndLeadFormProps {
+  onOpenCrm?: () => void;
+}
 
 interface LeadFormState {
   fullName: string;
@@ -27,7 +32,7 @@ interface SubmissionSuccess {
   countdown: number;
 }
 
-export default function FaqAndLeadForm() {
+export default function FaqAndLeadForm({ onOpenCrm }: FaqAndLeadFormProps) {
   const [openFaqId, setOpenFaqId] = useState<string>(FAQ_ITEMS[0].id);
 
   // Strictly 3 inputs as specified in PRD 4.1
@@ -92,6 +97,17 @@ export default function FaqAndLeadForm() {
 
     setIsSubmitting(true);
 
+    const fallbackMsg = [
+      'Salam sejahtera GIS College Malaysia,',
+      'Saya berminat untuk mengetahui maklumat lanjut mengenai Kursus Elektrik (Pengambilan 2026).',
+      '',
+      `Nama Penuh: ${fullName}`,
+      `No. Telefon: ${phone}`,
+      `Emel: ${email}`,
+    ].join('\n');
+
+    let waUrl = `https://wa.me/60169865648?text=${encodeURIComponent(fallbackMsg)}`;
+
     try {
       const response = await fetch('/api/leads', {
         method: 'POST',
@@ -99,45 +115,35 @@ export default function FaqAndLeadForm() {
         body: JSON.stringify({ fullName, phone, email }),
       });
 
-      const result = (await response.json()) as {
-        success?: boolean;
-        error?: string;
-        whatsappUrl?: string;
-      };
-
-      if (!response.ok || !result.success) {
-        setFieldError(result.error ?? 'Ralat sementara berlaku. Sila cuba sebentar lagi.');
+      if (response.ok) {
+        const result = (await response.json()) as {
+          success?: boolean;
+          whatsappUrl?: string;
+        };
+        if (result.whatsappUrl) {
+          waUrl = result.whatsappUrl;
+        }
+      } else if (response.status === 400) {
+        const result = (await response.json()) as { error?: string };
+        setFieldError(result.error ?? 'Sila semak semula maklumat borang anda.');
         setIsSubmitting(false);
         return;
       }
-
-      const fallbackMsg = [
-        'Salam sejahtera GIS College Malaysia,',
-        'Saya berminat untuk mengetahui maklumat lanjut mengenai Kursus Elektrik (Pengambilan 2026).',
-        '',
-        `Nama Penuh: ${fullName}`,
-        `No. Telefon: ${phone}`,
-        `Emel: ${email}`,
-      ].join('\n');
-
-      const waUrl =
-        result.whatsappUrl ??
-        `https://wa.me/60169865648?text=${encodeURIComponent(fallbackMsg)}`;
-
-      setSuccessData({
-        fullName,
-        phone,
-        email,
-        whatsappUrl: waUrl,
-        countdown: 1,
-      });
     } catch {
-      setFieldError(
-        'Sambungan rangkaian terganggu. Sila semak internet anda atau hubungi terus melalui WhatsApp.',
-      );
-    } finally {
-      setIsSubmitting(false);
+      // Proceed cleanly with localStorage CRM storage and WhatsApp flow if offline/static
     }
+
+    // Persist lead automatically to localStorage under "gis_college_leads" for CRM dashboard
+    appendLeadToStorage({ fullName, phone, email });
+
+    setSuccessData({
+      fullName,
+      phone,
+      email,
+      whatsappUrl: waUrl,
+      countdown: 1,
+    });
+    setIsSubmitting(false);
   };
 
   const handleReset = () => {
@@ -309,6 +315,17 @@ export default function FaqAndLeadForm() {
                         Hantar Pertanyaan Lain
                       </button>
                     </div>
+                    {onOpenCrm && (
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={onOpenCrm}
+                          className="text-xs font-semibold text-[#1e40af] hover:underline cursor-pointer"
+                        >
+                          Lihat Rekod Prospek dalam CRM Pentadbir →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
