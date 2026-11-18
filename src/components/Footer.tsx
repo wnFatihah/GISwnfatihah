@@ -1,10 +1,11 @@
+import { Lock } from 'lucide-react';
 import { WHATSAPP_DIRECT_URL, WHATSAPP_DISPLAY } from '../data/gisContent';
 
 interface FooterProps {
-  onOpenCrm: () => void;
+  onOpenCrmAccess: () => void;
 }
 
-export default function Footer({ onOpenCrm }: FooterProps) {
+export default function Footer({ onOpenCrmAccess }: FooterProps) {
   return (
     <footer className="bg-[#0f2b5c] text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -56,15 +57,6 @@ export default function Footer({ onOpenCrm }: FooterProps) {
                   Soalan Lazim (FAQ)
                 </a>
               </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={onOpenCrm}
-                  className="text-left text-[#f59e0b] hover:underline cursor-pointer"
-                >
-                  Portal CRM Pentadbir
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -89,7 +81,17 @@ export default function Footer({ onOpenCrm }: FooterProps) {
 
         <div className="mt-8 flex flex-col items-start justify-between gap-4 text-xs text-white/65 sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} GIS College Malaysia. Hak Cipta Terpelihara.</p>
-          <p>Program Kemahiran Teknikal &amp; Kursus Elektrik · Sejak 2001</p>
+          <div className="flex flex-wrap items-center gap-4">
+            <span>Program Kemahiran Teknikal &amp; Kursus Elektrik · Sejak 2001</span>
+            <button
+              type="button"
+              onClick={onOpenCrmAccess}
+              className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-[#f59e0b]/50 hover:text-[#f59e0b] whitespace-nowrap cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f59e0b]"
+            >
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Akses CRM Admin</span>
+            </button>
+          </div>
         </div>
       </div>
     </footer>

@@ -14,10 +14,6 @@ import {
 } from '../data/gisContent';
 import { appendLeadToStorage } from '../utils/leadsStorage';
 
-interface FaqAndLeadFormProps {
-  onOpenCrm?: () => void;
-}
-
 interface LeadFormState {
   fullName: string;
   phone: string;
@@ -32,7 +28,7 @@ interface SubmissionSuccess {
   countdown: number;
 }
 
-export default function FaqAndLeadForm({ onOpenCrm }: FaqAndLeadFormProps) {
+export default function FaqAndLeadForm() {
   const [openFaqId, setOpenFaqId] = useState<string>(FAQ_ITEMS[0].id);
 
   // Strictly 3 inputs as specified in PRD 4.1
@@ -315,17 +311,6 @@ export default function FaqAndLeadForm({ onOpenCrm }: FaqAndLeadFormProps) {
                         Hantar Pertanyaan Lain
                       </button>
                     </div>
-                    {onOpenCrm && (
-                      <div className="pt-1">
-                        <button
-                          type="button"
-                          onClick={onOpenCrm}
-                          className="text-xs font-semibold text-[#1e40af] hover:underline cursor-pointer"
-                        >
-                          Lihat Rekod Prospek dalam CRM Pentadbir →
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : (

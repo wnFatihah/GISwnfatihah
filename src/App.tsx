@@ -6,6 +6,9 @@
 import { MotionConfig } from 'motion/react';
 import { useEffect, useState } from 'react';
 import AdminCrmDashboard from './components/AdminCrmDashboard';
+import AdminLoginModal, {
+  isCrmSessionAuthenticated,
+} from './components/AdminLoginModal';
 import CampusAndTestimonials from './components/CampusAndTestimonials';
 import FaqAndLeadForm from './components/FaqAndLeadForm';
 import Footer from './components/Footer';
@@ -25,6 +28,7 @@ function getInitialView(): ActiveView {
 
 export default function App() {
   const [activeView, setActiveView] = useState<ActiveView>(getInitialView);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -39,12 +43,21 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [activeView]);
 
-  const openCrm = () => {
+  const enterCrmView = () => {
+    setIsLoginModalOpen(false);
     setActiveView('crm');
     if (window.location.hash !== '#crm') {
       window.history.pushState(null, '', '#crm');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenCrmAccess = () => {
+    if (isCrmSessionAuthenticated()) {
+      enterCrmView();
+      return;
+    }
+    setIsLoginModalOpen(true);
   };
 
   const backToLanding = () => {
@@ -91,15 +104,20 @@ export default function App() {
         />
       ) : (
         <div className="min-h-screen bg-[#f8fafc] text-[#0f2b5c]">
-          <Navbar onNavigateToForm={scrollToLeadForm} onOpenCrm={openCrm} />
+          <Navbar onNavigateToForm={scrollToLeadForm} />
           <main>
             <HeroSection onNavigateToForm={scrollToLeadForm} />
             <PainPointsAndSolutions />
             <WhyChooseAndCareers onNavigateToForm={scrollToLeadForm} />
             <CampusAndTestimonials />
-            <FaqAndLeadForm onOpenCrm={openCrm} />
+            <FaqAndLeadForm />
           </main>
-          <Footer onOpenCrm={openCrm} />
+          <Footer onOpenCrmAccess={handleOpenCrmAccess} />
+          <AdminLoginModal
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            onAuthenticated={enterCrmView}
+          />
         </div>
       )}
     </MotionConfig>

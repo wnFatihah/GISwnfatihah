@@ -3,7 +3,6 @@ import { useState } from 'react';
 
 interface NavbarProps {
   onNavigateToForm: () => void;
-  onOpenCrm: () => void;
 }
 
 const NAV_LINKS = [
@@ -11,9 +10,10 @@ const NAV_LINKS = [
   { href: '#solusi', label: 'Solusi' },
   { href: '#kerjaya', label: 'Kerjaya' },
   { href: '#kampus', label: 'Kampus' },
+  { href: '#soalan', label: 'Soalan' },
 ];
 
-export default function Navbar({ onNavigateToForm, onOpenCrm }: NavbarProps) {
+export default function Navbar({ onNavigateToForm }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -55,13 +55,6 @@ export default function Navbar({ onNavigateToForm, onOpenCrm }: NavbarProps) {
               {link.label}
             </a>
           ))}
-          <button
-            type="button"
-            onClick={onOpenCrm}
-            className="relative py-1 whitespace-nowrap shrink-0 transition-colors duration-150 hover:text-[#0f2b5c] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-[#1e40af] after:transition-all after:duration-200 hover:after:w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1e40af]"
-          >
-            CRM Admin
-          </button>
         </nav>
 
         {/* Zone 3: 1 primary CTA action */}
@@ -100,16 +93,6 @@ export default function Navbar({ onNavigateToForm, onOpenCrm }: NavbarProps) {
                 {link.label}
               </a>
             ))}
-            <button
-              type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                onOpenCrm();
-              }}
-              className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#1e40af] hover:bg-[#f8fafc] cursor-pointer"
-            >
-              CRM Admin
-            </button>
             <button
               type="button"
               onClick={() => {

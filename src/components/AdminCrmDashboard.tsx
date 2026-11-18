@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   Check,
   Download,
+  LogOut,
   MessageCircle,
   Plus,
   Save,
@@ -22,6 +23,11 @@ import {
   type LeadRecord,
   type LeadStatus,
 } from '../utils/leadsStorage';
+import {
+  AdminLoginCard,
+  clearCrmSession,
+  isCrmSessionAuthenticated,
+} from './AdminLoginModal';
 
 interface AdminCrmDashboardProps {
   onBackToLanding: () => void;
@@ -40,6 +46,9 @@ export default function AdminCrmDashboard({
   onBackToLanding,
   onGoToRegistrationForm,
 }: AdminCrmDashboardProps) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
+    isCrmSessionAuthenticated(),
+  );
   const [leads, setLeads] = useState<LeadRecord[]>(() => loadLeadsFromStorage());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Semua' | LeadStatus>('Semua');
@@ -203,11 +212,31 @@ export default function AdminCrmDashboard({
     URL.revokeObjectURL(url);
   };
 
+  const handleLogout = () => {
+    clearCrmSession();
+    setIsAuthenticated(false);
+    onBackToLanding();
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] px-4 py-12 architectural-grid">
+        <AdminLoginCard
+          onSuccess={() => {
+            setLeads(loadLeadsFromStorage());
+            setIsAuthenticated(true);
+          }}
+          onCancel={onBackToLanding}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-[#0f2b5c]">
       {/* CRM Top Bar Contract: Breadcrumb Left — Primary Actions Right */}
       <header className="sticky top-0 z-40 border-b border-[#0f2b5c]/12 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -215,20 +244,20 @@ export default function AdminCrmDashboard({
               className="inline-flex items-center gap-2 rounded-lg border border-[#0f2b5c]/15 bg-[#f8fafc] px-3 py-2 text-xs font-semibold text-[#0f2b5c] transition-colors hover:bg-[#eff6ff] whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#1e40af] sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              <span>Laman Utama</span>
+              <span className="hidden sm:inline">Laman Utama</span>
             </button>
-            <div className="hidden items-center gap-2 text-sm text-[#0f2b5c]/65 truncate sm:flex">
+            <div className="hidden items-center gap-2 text-sm text-[#0f2b5c]/65 truncate md:flex">
               <span className="font-bold text-[#0f2b5c]">GIS College</span>
               <span aria-hidden="true">/</span>
               <span className="truncate">CRM Kemasukan Prospek</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setShowAddForm((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#0f2b5c]/20 bg-white px-3.5 py-2 text-xs font-semibold text-[#0f2b5c] transition-colors hover:bg-[#f8fafc] whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#1e40af] sm:text-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#0f2b5c]/20 bg-white px-3 py-2 text-xs font-semibold text-[#0f2b5c] transition-colors hover:bg-[#f8fafc] whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#1e40af] sm:px-3.5 sm:text-sm"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               <span>Tambah Prospek</span>
@@ -238,10 +267,20 @@ export default function AdminCrmDashboard({
               type="button"
               onClick={handleExportCsv}
               disabled={leads.length === 0}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#f59e0b] px-4 py-2 text-xs font-bold text-[#0f2b5c] transition-colors hover:bg-[#d97706] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0f2b5c] sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#f59e0b] px-3.5 py-2 text-xs font-bold text-[#0f2b5c] transition-colors hover:bg-[#d97706] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0f2b5c] sm:px-4 sm:text-sm"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
               <span>Eksport CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Log keluar sesi pentadbir"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#0f2b5c]/15 bg-[#f8fafc] px-3 py-2 text-xs font-semibold text-[#0f2b5c]/80 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#1e40af] sm:text-sm"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Log Keluar</span>
             </button>
           </div>
         </div>
