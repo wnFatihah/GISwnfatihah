@@ -1,0 +1,6 @@
+{
+  "name": "GIS College Malaysia — Kursus Elektrik",
+  "description": "Laman rasmi maklumat dan pendaftaran Kursus Elektrik GIS College Malaysia (Sejak 2001) untuk ibu bapa dan pelajar lepasan sekolah menengah.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
