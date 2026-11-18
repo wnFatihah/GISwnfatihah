@@ -13,7 +13,6 @@ import {
   WHATSAPP_DISPLAY,
 } from '../data/gisContent';
 import {
-  LEADS_STORAGE_KEY,
   normalizeLeadList,
   type LeadRecord,
 } from '../utils/leadsStorage';
@@ -133,7 +132,7 @@ export default function FaqAndLeadForm() {
       // Proceed cleanly with localStorage CRM storage and WhatsApp flow if offline/static
     }
 
-    // Persist lead automatically to localStorage under "gis_college_leads"
+    // Simpan objek prospek baharu ke hadapan senarai sedia ada dalam localStorage ("gis_college_leads")
     const newLead: LeadRecord = {
       id: 'lead-' + Date.now(),
       fullName: fullName,
@@ -145,15 +144,16 @@ export default function FaqAndLeadForm() {
     };
 
     try {
-      const existingRaw = window.localStorage.getItem(LEADS_STORAGE_KEY);
-      const existingLeads = existingRaw
-        ? normalizeLeadList(JSON.parse(existingRaw))
+      const existingRaw = window.localStorage.getItem('gis_college_leads');
+      const parsedExisting: unknown = existingRaw ? JSON.parse(existingRaw) : [];
+      const existingLeads = Array.isArray(parsedExisting)
+        ? normalizeLeadList(parsedExisting)
         : [];
       const updatedLeads = [newLead, ...existingLeads];
-      window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(updatedLeads));
+      window.localStorage.setItem('gis_college_leads', JSON.stringify(updatedLeads));
       window.dispatchEvent(new Event('gis-leads-updated'));
     } catch {
-      window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify([newLead]));
+      window.localStorage.setItem('gis_college_leads', JSON.stringify([newLead]));
       window.dispatchEvent(new Event('gis-leads-updated'));
     }
 

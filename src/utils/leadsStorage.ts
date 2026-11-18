@@ -35,7 +35,7 @@ export function normalizeLeadList(parsed: unknown): LeadRecord[] {
 
   return parsed
     .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
-    .map((item) => {
+    .map((item, idx) => {
       const submittedAt =
         typeof item.submittedAt === 'string'
           ? item.submittedAt
@@ -46,7 +46,7 @@ export function normalizeLeadList(parsed: unknown): LeadRecord[] {
         id:
           typeof item.id === 'string' && item.id.trim()
             ? item.id
-            : `lead-${Date.now()}`,
+            : `lead-${Date.now()}-${idx}`,
         fullName: typeof item.fullName === 'string' ? item.fullName : '',
         phone: typeof item.phone === 'string' ? item.phone : '',
         email: typeof item.email === 'string' ? item.email : '',

@@ -95,13 +95,21 @@ export default function AdminCrmDashboard({
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncStorage();
+      }
+    };
+
     window.addEventListener('storage', handleStorageEvent);
     window.addEventListener('gis-leads-updated', syncStorage);
     window.addEventListener('focus', syncStorage);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       window.removeEventListener('storage', handleStorageEvent);
       window.removeEventListener('gis-leads-updated', syncStorage);
       window.removeEventListener('focus', syncStorage);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isAuthenticated]);
 
