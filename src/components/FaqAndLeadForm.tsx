@@ -12,7 +12,11 @@ import {
   WHATSAPP_DIRECT_URL,
   WHATSAPP_DISPLAY,
 } from '../data/gisContent';
-import { appendLeadToStorage } from '../utils/leadsStorage';
+import {
+  LEADS_STORAGE_KEY,
+  normalizeLeadList,
+  type LeadRecord,
+} from '../utils/leadsStorage';
 
 interface LeadFormState {
   fullName: string;
@@ -129,8 +133,29 @@ export default function FaqAndLeadForm() {
       // Proceed cleanly with localStorage CRM storage and WhatsApp flow if offline/static
     }
 
-    // Persist lead automatically to localStorage under "gis_college_leads" for CRM dashboard
-    appendLeadToStorage({ fullName, phone, email });
+    // Persist lead automatically to localStorage under "gis_college_leads"
+    const newLead: LeadRecord = {
+      id: 'lead-' + Date.now(),
+      fullName: fullName,
+      phone: phone,
+      email: email,
+      submittedAt: new Date().toISOString(),
+      status: 'Baru',
+      notes: '',
+    };
+
+    try {
+      const existingRaw = window.localStorage.getItem(LEADS_STORAGE_KEY);
+      const existingLeads = existingRaw
+        ? normalizeLeadList(JSON.parse(existingRaw))
+        : [];
+      const updatedLeads = [newLead, ...existingLeads];
+      window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(updatedLeads));
+      window.dispatchEvent(new Event('gis-leads-updated'));
+    } catch {
+      window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify([newLead]));
+      window.dispatchEvent(new Event('gis-leads-updated'));
+    }
 
     setSuccessData({
       fullName,

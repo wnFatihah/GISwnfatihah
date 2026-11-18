@@ -15,10 +15,10 @@ export interface LeadRecord {
   fullName: string;
   phone: string;
   email: string;
+  submittedAt: string;
   status: LeadStatus;
   notes: string;
-  createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 function isValidLeadStatus(value: unknown): value is LeadStatus {
@@ -26,6 +26,36 @@ function isValidLeadStatus(value: unknown): value is LeadStatus {
     typeof value === 'string' &&
     (LEAD_STATUS_OPTIONS as readonly string[]).includes(value)
   );
+}
+
+export function normalizeLeadList(parsed: unknown): LeadRecord[] {
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
+    .map((item) => {
+      const submittedAt =
+        typeof item.submittedAt === 'string'
+          ? item.submittedAt
+          : typeof item.createdAt === 'string'
+            ? item.createdAt
+            : new Date().toISOString();
+      return {
+        id:
+          typeof item.id === 'string' && item.id.trim()
+            ? item.id
+            : `lead-${Date.now()}`,
+        fullName: typeof item.fullName === 'string' ? item.fullName : '',
+        phone: typeof item.phone === 'string' ? item.phone : '',
+        email: typeof item.email === 'string' ? item.email : '',
+        submittedAt,
+        status: isValidLeadStatus(item.status) ? item.status : 'Baru',
+        notes: typeof item.notes === 'string' ? item.notes : '',
+        updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : submittedAt,
+      };
+    });
 }
 
 export function loadLeadsFromStorage(): LeadRecord[] {
@@ -38,31 +68,7 @@ export function loadLeadsFromStorage(): LeadRecord[] {
     if (!raw) {
       return [];
     }
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed
-      .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
-      .map((item) => {
-        const createdAt =
-          typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString();
-        return {
-          id:
-            typeof item.id === 'string' && item.id.trim()
-              ? item.id
-              : `lead_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          fullName: typeof item.fullName === 'string' ? item.fullName : '',
-          phone: typeof item.phone === 'string' ? item.phone : '',
-          email: typeof item.email === 'string' ? item.email : '',
-          status: isValidLeadStatus(item.status) ? item.status : 'Baru',
-          notes: typeof item.notes === 'string' ? item.notes : '',
-          createdAt,
-          updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : createdAt,
-        };
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return normalizeLeadList(JSON.parse(raw));
   } catch {
     return [];
   }
@@ -81,16 +87,14 @@ export function appendLeadToStorage(input: {
   email: string;
   notes?: string;
 }): LeadRecord {
-  const now = new Date().toISOString();
   const newLead: LeadRecord = {
-    id: `lead_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    id: 'lead-' + Date.now(),
     fullName: input.fullName.trim(),
     phone: input.phone.trim(),
     email: input.email.trim(),
+    submittedAt: new Date().toISOString(),
     status: 'Baru',
     notes: input.notes?.trim() ?? '',
-    createdAt: now,
-    updatedAt: now,
   };
 
   const existing = loadLeadsFromStorage();
@@ -149,8 +153,8 @@ export function buildLeadsCsv(leads: LeadRecord[]): string {
       lead.email,
       lead.status,
       lead.notes,
-      formatDateTimeMY(lead.createdAt),
-      formatDateTimeMY(lead.updatedAt),
+      formatDateTimeMY(lead.submittedAt),
+      formatDateTimeMY(lead.updatedAt ?? lead.submittedAt),
     ]
       .map(escapeCsvCell)
       .join(','),

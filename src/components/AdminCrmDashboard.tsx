@@ -18,7 +18,7 @@ import {
   formatPhoneForWhatsApp,
   LEAD_STATUS_OPTIONS,
   LEADS_STORAGE_KEY,
-  loadLeadsFromStorage,
+  normalizeLeadList,
   saveLeadsToStorage,
   type LeadRecord,
   type LeadStatus,
@@ -49,7 +49,22 @@ export default function AdminCrmDashboard({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
     isCrmSessionAuthenticated(),
   );
-  const [leads, setLeads] = useState<LeadRecord[]>(() => loadLeadsFromStorage());
+  const readLeadsFromLocalStorage = (): LeadRecord[] => {
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    try {
+      const raw = window.localStorage.getItem('gis_college_leads');
+      if (!raw) {
+        return [];
+      }
+      return normalizeLeadList(JSON.parse(raw));
+    } catch {
+      return [];
+    }
+  };
+
+  const [leads, setLeads] = useState<LeadRecord[]>(() => readLeadsFromLocalStorage());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Semua' | LeadStatus>('Semua');
 
@@ -66,21 +81,29 @@ export default function AdminCrmDashboard({
   const [newNote, setNewNote] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
 
-  // Keep synced if storage changes in another tab or after returning from landing
+  // Keep synced with localStorage on mount, auth changes, cross-tab storage, and custom events
   useEffect(() => {
     const syncStorage = () => {
-      setLeads(loadLeadsFromStorage());
+      setLeads(readLeadsFromLocalStorage());
     };
 
+    syncStorage();
+
     const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key === LEADS_STORAGE_KEY) {
+      if (!e.key || e.key === LEADS_STORAGE_KEY) {
         syncStorage();
       }
     };
 
     window.addEventListener('storage', handleStorageEvent);
-    return () => window.removeEventListener('storage', handleStorageEvent);
-  }, []);
+    window.addEventListener('gis-leads-updated', syncStorage);
+    window.addEventListener('focus', syncStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorageEvent);
+      window.removeEventListener('gis-leads-updated', syncStorage);
+      window.removeEventListener('focus', syncStorage);
+    };
+  }, [isAuthenticated]);
 
   const filteredLeads = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -186,7 +209,7 @@ export default function AdminCrmDashboard({
       email: newEmail,
       notes: newNote,
     });
-    setLeads(loadLeadsFromStorage());
+    setLeads(readLeadsFromLocalStorage());
     setNewName('');
     setNewPhone('');
     setNewEmail('');
@@ -223,7 +246,7 @@ export default function AdminCrmDashboard({
       <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] px-4 py-12 architectural-grid">
         <AdminLoginCard
           onSuccess={() => {
-            setLeads(loadLeadsFromStorage());
+            setLeads(readLeadsFromLocalStorage());
             setIsAuthenticated(true);
           }}
           onCancel={onBackToLanding}
@@ -539,7 +562,7 @@ export default function AdminCrmDashboard({
                               {lead.fullName}
                             </div>
                             <div className="mt-1 font-mono text-xs text-[#0f2b5c]/60 tabular-nums">
-                              {formatDateTimeMY(lead.createdAt)}
+                              {formatDateTimeMY(lead.submittedAt)}
                             </div>
                           </td>
 
@@ -683,7 +706,7 @@ export default function AdminCrmDashboard({
                           {lead.fullName}
                         </h3>
                         <div className="mt-0.5 font-mono text-xs text-[#0f2b5c]/60 tabular-nums">
-                          {formatDateTimeMY(lead.createdAt)}
+                          {formatDateTimeMY(lead.submittedAt)}
                         </div>
                       </div>
                       <select
